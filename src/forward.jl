@@ -13,6 +13,9 @@ julia> using Llama2;
 julia>   x = [1.0f0,2,3];
 julia>   w = [1.0f0,1,1];
 julia>   o = [0.0f0,0,0];
+julia>   x = [1.0f0,2,3];
+julia>   w = [1.0f0,1,1];
+julia>   o = [0.0f0,0,0];
 
 julia> rmsnorm!(o, x, w) 
 

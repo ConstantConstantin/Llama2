@@ -45,3 +45,13 @@ julia> "our example"
 ```
 
 Please refer to the docs for more detailed information on how to use this package.
+
+## Links
+
+### Meta Datasets for diffrent sizes
+https://huggingface.co/meta-llama
+
+### Original Repo of Llama2 in C
+https://github.com/karpathy/llama2.c
+
+

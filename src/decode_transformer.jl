@@ -1,15 +1,15 @@
 """
-    decode_transformer(path::String)
+    Transformer(path::String)
 
 Load a binary file with location `path` and construct a `Transformer` from its content.
 The file is expected to have a header of 7 Int32 values followed by Float32 data.
 
 # Example
 ```
-julia> t = Llama2.decode_transformer("/PATH/TO/YOUR.bin");
+julia> t = Llama2.Transformer("/PATH/TO/YOUR.bin");
 ```
 """
-function decode_transformer(path::String)
+function Transformer(path::String)
 
     open(path, "r") do data
         

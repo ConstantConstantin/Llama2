@@ -1,3 +1,11 @@
+"""
+    Config
+
+Create a `Config` containing 7 `Int32`. These describe meta-data to read values from an input file.
+
+# Developer Notes
+This is an internal struct.
+"""
 struct Config
     dim::Int32
     hidden_dim::Int32
@@ -8,6 +16,14 @@ struct Config
     seq_len::Int32
 end
 
+"""
+    TransformerWeights
+
+Create a `TransformerWeights` containing several `Float32` containers. These describe actual weight data that is loaded from an input file.
+
+# Developer Notes
+This is an internal struct.
+"""
 struct TransformerWeights
     token_embedding_table::Matrix{Float32}
     rms_att_weight::Matrix{Float32}
@@ -23,6 +39,14 @@ struct TransformerWeights
     wcls::Matrix{Float32}
 end
 
+"""
+    RunState
+
+Create a `RunState` containing several `Float32` containers. These reflect the state of the `Transformer` at run-time.
+
+# Developer Notes
+This is an internal struct.
+"""
 struct RunState
     x::Vector{Float32}
     xb::Vector{Float32}
@@ -38,12 +62,21 @@ struct RunState
     value_cache::Array{Float32, 3}
 end
 
+
 struct Transformer
     config::Config
     weights::TransformerWeights
     state::RunState
     # omitting the fd/file size info for now because the content already should be stored into the fields of config and weights
 
+    """
+    Transformer(config::Config, weights::TransformerWeights)
+
+Create a `Transformer` with data from `config` and `weights`. The `RunState` containers are initialized empty and just are assigned the corresponding dimensions.
+
+# Developer Notes
+This is an internal struct.
+     """
     function Transformer(config::Config, weights::TransformerWeights)
         kv_dim = div((config.dim * config.n_kv_heads), config.n_heads)
         x = Vector{Float32}(undef, config.dim)

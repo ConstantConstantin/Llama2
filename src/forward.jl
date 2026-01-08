@@ -31,8 +31,8 @@ Dimensions of o, x, and w not quite sure yet.
 
 function rmsnorm!(o::Vector{T}, x::Vector{T}, w::Vector{T}) where {T<:Float32}
 
-    @assert length(w) == length(o) == length(x) "x, o, and w must have the same dimensions"
-    @assert !isempty(x) "x must not be empty"
+    (length(w) != length(o) || length(o) != length(x)) && throw(DimensionMismatch("x, o, and w must have the same dimensions"))
+    isempty(x) && throw(ArgumentError("x must not be empty"))
 
     ss = 0.0
 
@@ -80,7 +80,7 @@ julia> x
 
 function softmax!(x::Vector{Float32})
 
-    @assert !isempty(x) "x must not be empty"
+    isempty(x) && throw(ArgumentError("x must not be empty"))
 
     max_x = maximum(x)
 
@@ -96,12 +96,3 @@ function softmax!(x::Vector{Float32})
 
     return nothing
 end
-
-function forward!(transformer::Transformer)
-    for i in eachindex(transformer.config.n_layers)
-        
-    end
-end
-
-
-

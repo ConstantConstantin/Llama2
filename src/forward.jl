@@ -1,9 +1,9 @@
 using LoopVectorization: @turbo
 
 """
-rmsnorm!(o, x, w)
-Updates the Output of an Layer 'o' with the rmsnorm scaled weights and inputs 'w .* x'.
-Using @turbo for performance optimization.
+    rmsnorm(x, w)
+
+Calculate the rmsnorm of `x` and `w`, the scaled product 'λw * x'.
 
 # Examples
 ```jldoctest
@@ -11,11 +11,8 @@ julia> using Llama2;
 
 julia>   x = [1.0f0,2,3];
 julia>   w = [1.0f0,1,1];
-julia>   o = [0.0f0,0,0];
 
-julia> rmsnorm!(o, x, w) 
-
-julia> o
+julia> o = rmsnorm(x, w) 
 3-element Vector{Float32}:
  0.46290955
  0.9258191
@@ -26,7 +23,7 @@ julia> o
 # Developer Notes
 Dimensions of o, x, and w not quite sure yet.
 """
-function rmsnorm(x::Vector{T}, w::Vector{T}) where {T<:Float32}
+function rmsnorm(x::Vector{Float32}, w::Vector{Float32})
 
     (length(w) != length(o) || length(o) != length(x)) && throw(DimensionMismatch("x, o, and w must have the same dimensions"))
     isempty(x) && throw(ArgumentError("x must not be empty"))

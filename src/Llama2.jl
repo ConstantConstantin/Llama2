@@ -36,17 +36,20 @@ function talktollm(modelpath::String, vocabpath::String, prompt::String, max_tok
         input_tokens = encode(tok, prompt)
     end
 
-    for pos in 1:max_tokens
+    for pos in 1:max_tokens + length(input_tokens)
         forward!(transformer, Int32(token), Int32(pos))
-        if pos < length(input_tokens)
+        if pos <= length(input_tokens)
             next = input_tokens[pos]
         else
             logits = transformer.state.logits ./ 0.8f0
             softmax!(logits)
             next = wsample(1:transformer.config.vocab_size, logits)
         end
+
         print(tok.vocab[next])
+
         token = next
+        
     end
 
     return nothing

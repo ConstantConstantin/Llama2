@@ -9,9 +9,8 @@ Calculate the rmsnorm of `x` and `w`, the scaled product 'λw * x'.
 
 # Examples
 ```jldoctest
-julia> using Llama2;
-
 julia>  x = [1.0f0,2,3];
+
 julia>  w = [1.0f0,1,1];
 
 julia> o = Llama2.rmsnorm(x, w) 
@@ -46,11 +45,9 @@ Using @turbo for performance optimization.
 
 # Examples
 ```jldoctest
-julia> using Llama2;
-
 julia> x = [-1.0f0,0,1];
 
-julia> softmax!(x)
+julia> Llama2.softmax!(x)
 
 julia> x
 3-element Vector{Float32}:
@@ -93,8 +90,8 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
 
         xb = rmsnorm(x, weights.rms_att_weight[l, :])
 
-        k = @view state.key_cache[l, pos + 1, :]
-        v = @view state.value_cache[l, pos + 1, :]
+        k = @view state.key_cache[l, pos, :]
+        v = @view state.value_cache[l, pos, :]
         # matmul to get q, k, v
 
         q = weights.wq[l, :, :] * xb
@@ -105,7 +102,7 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
 
             head_dim = i % head_size
             freq = 1.0f0 / (10000.0f0^(head_dim / head_size))
-            val = pos * freq
+            val = (pos - 1) * freq
             fcr = cos(val)
             fci = sin(val)
             
@@ -122,9 +119,9 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
         for h in 1:config.n_heads # multi-head attention
 
             q_head = @view q[((h - 1)* head_size + 1):(h  * head_size)]
-            att = Vector{Float32}(undef, pos + 1)
+            att = Vector{Float32}(undef, pos)
 
-            for t in 1:(pos + 1)
+            for t in 1:pos
 
                 k = state.key_cache[l, t, ((div(h, kv_mul) - 1) * head_size + 1):(div(h, kv_mul) * head_size)]
 
@@ -137,7 +134,7 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
 
             xb_head = @view xb[((h - 1) * head_size + 1):(h * head_size)]
 
-            for t in 1:(pos + 1)
+            for t in 1:pos
 
                 v = state.value_cache[l, t, ((div(h, kv_mul) - 1) * head_size + 1):(div(h, kv_mul) * head_size)]
                 a = att[t]

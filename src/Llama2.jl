@@ -25,7 +25,7 @@ julia> talktollm("/PATH/TO/MODEL.bin"
                 ,"hey whats up?", 100);
 ```
 """
-function talktollm(modelpath::String, vocabpath::String, prompt::String, max_tokens::Int=50)
+function talktollm(modelpath::String, vocabpath::String, prompt::String)
     
     transformer = Transformer(modelpath)
     tok = Tokenizer(vocabpath, transformer.config.vocab_size)
@@ -40,7 +40,7 @@ function talktollm(modelpath::String, vocabpath::String, prompt::String, max_tok
         token = input_tokens[1]
     end
 
-    for pos in 1:max_tokens + n_input_tokens
+    for pos in 1:transformer.config.seq_len
 
         logits = forward!(transformer, Int32(token), Int32(pos))
         

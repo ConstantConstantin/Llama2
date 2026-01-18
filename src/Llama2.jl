@@ -34,18 +34,19 @@ function talktollm(modelpath::String, vocabpath::String, prompt::String, max_tok
 
     n_input_tokens = length(input_tokens)
 
-    if !isempty(input_tokens)
+    if isempty(input_tokens)
         token = input_tokens[1]
     end
 
     for pos in 1:max_tokens + n_input_tokens
 
-        logits = forward!(transformer, Int32(token), Int32(pos))
-        
+        #logits = forward!(transformer, Int32(token), Int32(pos))
+        logits = forward!(Int32(token), Int32(pos), transformer.config, transformer.state, transformer.weights)
         if pos <= n_input_tokens
             next = input_tokens[pos]
         else
-            next = wsample(1:transformer.config.vocab_size, logits)
+            #next = wsample(1:transformer.config.vocab_size, logits)
+            next = argmax(logits)
         end
 
         print(tok.vocab[next])

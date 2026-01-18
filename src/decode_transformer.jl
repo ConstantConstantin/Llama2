@@ -54,15 +54,26 @@ function Transformer(path::String)
         rms_final_weight = Vector{Float32}(undef, config.dim)
         read!(data, rms_final_weight)
 
-        skip(data, 4 * config.seq_len * head_size)
+        # skip(data, 4 * config.seq_len * head_size)
         
+        # if shared_weights
+        #     wcls = Matrix{Float32}(token_embedding_table)
+        # else
+        #     wcls = Matrix{Float32}(undef, config.vocab_size, config.dim)
+        # end
+        freq_cis_real = Vector{Float32}(undef, config.seq_len * (div(div(config.dim, config.n_heads), 2)))
+        read!(data, freq_cis_real)
+
+        freq_cis_imag = Vector{Float32}(undef, config.seq_len * (div(div(config.dim, config.n_heads), 2)))
+        read!(data, freq_cis_imag)
+
         if shared_weights
             wcls = Matrix{Float32}(token_embedding_table)
         else
             wcls = Matrix{Float32}(undef, config.vocab_size, config.dim)
         end
-        
-        weights = TransformerWeights(token_embedding_table, rms_att_weight, rms_ffn_weight, wq, wk, wv, wo, w1, w2, w3, rms_final_weight, wcls)
+
+        weights = TransformerWeights(token_embedding_table, rms_att_weight, rms_ffn_weight, wq, wk, wv, wo, w1, w2, w3, rms_final_weight, freq_cis_real, freq_cis_imag, wcls)
         
         return Transformer(config, weights)
     end

@@ -84,7 +84,7 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
     head_size = div(dim, config.n_heads)
 
     # assigning input token embedding to x
-    x = @view weights.token_embedding_table[token, :]
+    x = weights.token_embedding_table[token, :]
 
     for l in 1:config.n_layers
 
@@ -100,14 +100,14 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
 
         for i in 1:2:dim
 
-            head_dim = i % head_size
+            head_dim = (i-1) % head_size 
             freq = 1.0f0 / (10000.0f0^(head_dim / head_size))
             val = (pos - 1) * freq
             fcr = cos(val)
             fci = sin(val)
             
             for v in 1:(1 + (i < kv_dim))
-                vec = v == 0 ? q : k
+                vec = v == 1 ? q : k
                 v0 = vec[i]
                 v1 = vec[i + 1]
                 vec[i] = v0 * fcr - v1 * fci
@@ -116,6 +116,8 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
 
         end
 
+        xb .= 0
+
         for h in 1:config.n_heads # multi-head attention
 
             q_head = @view q[((h - 1)* head_size + 1):(h  * head_size)]
@@ -123,7 +125,7 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
 
             for t in 1:pos
 
-                k = state.key_cache[l, t, ((div(h, kv_mul) - 1) * head_size + 1):(div(h, kv_mul) * head_size)]
+                k = state.key_cache[l, t, ((div(h-1, kv_mul)) * head_size + 1):(div(h, kv_mul) * head_size)]
 
                 score = dot(q_head, k)/sqrt(head_size)
                 att[t] = score
@@ -136,7 +138,7 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
 
             for t in 1:pos
 
-                v = state.value_cache[l, t, ((div(h, kv_mul) - 1) * head_size + 1):(div(h, kv_mul) * head_size)]
+                v = state.value_cache[l, t, ((div(h-1, kv_mul)) * head_size + 1):(div(h, kv_mul) * head_size)]
                 a = att[t]
                 
                 xb_head += a * v

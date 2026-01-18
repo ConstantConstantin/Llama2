@@ -28,8 +28,8 @@ julia> talktollm("/PATH/TO/MODEL.bin"
 function talktollm(modelpath::String, vocabpath::String, prompt::String, max_tokens::Int=50)
     
     transformer = Transformer(modelpath)
-    tok = Tokenizer(vocabpath, transformer.config.vocab_size-268)
-
+    tok = Tokenizer(vocabpath, transformer.config.vocab_size)
+    sampler = Sampler(transformer.config.vocab_size, 0.0, 1.0, 10)
     input_tokens = encode(tok, prompt)
 
     token = 1 # default for empty prompt
@@ -47,8 +47,10 @@ function talktollm(modelpath::String, vocabpath::String, prompt::String, max_tok
         if pos <= n_input_tokens
             next = input_tokens[pos]
         else
-            next = wsample(1:transformer.config.vocab_size, logits)
+            next = sampler(logits)
+            # next = wsample(1:transformer.config.vocab_size, logits)
         end
+        
 
         print(tok.vocab[next])
 

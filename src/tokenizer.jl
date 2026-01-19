@@ -110,7 +110,6 @@ function Tokenizer(tokenizer_path::String, vocab_size::Integer)
 
     open(tokenizer_path, "r") do f
         max_token_length = Int(read(f, Int32))
-        _ = read(f, 3624)
         for i in 1:vocab_size
             vocab_scores[i] = read(f, Float32)
             vocab_len = read(f, Int32)

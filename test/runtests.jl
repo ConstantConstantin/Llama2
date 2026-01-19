@@ -188,4 +188,5 @@ using Test
             @test_throws ArgumentError encode(tok2, "b")
         end
     end 
+    #include("forward.jl")
 end

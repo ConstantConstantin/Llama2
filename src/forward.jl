@@ -76,8 +76,8 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
     head_size = div(dim, config.n_heads)
 
     # assigning input token embedding to x
-    x = @view weights.token_embedding_table[token, :]
-
+    x = weights.token_embedding_table[token, :]
+    
     for l in 1:config.n_layers
 
         xb = rmsnorm(x, weights.rms_att_weight[l, :])
@@ -92,33 +92,37 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
 
         for i in 1:2:dim
 
-            head_dim = i % head_size
-            freq = 1.0f0 / (10000.0f0^(head_dim / head_size))
-            val = (pos - 1) * freq
+            head_dim = (i - 1) % head_size
+            val = (pos - 1)  / (10000.0f0^(head_dim / head_size))
             fcr = cos(val)
             fci = sin(val)
             
-            for v in 1:(1 + (i < kv_dim))
-                vec = v == 0 ? q : k
-                v0 = vec[i]
-                v1 = vec[i + 1]
-                vec[i] = v0 * fcr - v1 * fci
-                vec[i + 1] = v0 * fci + v1 * fcr
+            for vi in 1:(1 + (i <= kv_dim))
+                if vi == 1
+                    vec = @view q[i:(i + 1)]
+                else
+                    vec = @view k[i:(i + 1)]
+                end
+                v0 = vec[1]
+                v1 = vec[2]
+                vec[1] = v0 * fcr - v1 * fci
+                vec[2] = v0 * fci + v1 * fcr
             end
 
         end
 
+        xb .= 0
+
         for h in 1:config.n_heads # multi-head attention
 
-            q_head = @view q[((h - 1)* head_size + 1):(h  * head_size)]
-            att = Vector{Float32}(undef, pos)
+            q_head = @view q[((h - 1) * head_size + 1):(h  * head_size)]
+            att = Vector{Float32}(undef, pos + 1)
 
-            for t in 1:pos
+            for t in 1:(pos + 1)
 
-                k = state.key_cache[l, t, ((div(h, kv_mul) - 1) * head_size + 1):(div(h, kv_mul) * head_size)]
+                k = state.key_cache[l, t, (div(h - 1, kv_mul) * head_size + 1):((div(h - 1, kv_mul) + 1) * head_size)]
 
-                score = dot(q_head, k)/sqrt(head_size)
-                att[t] = score
+                att[t] = dot(q_head, k)/sqrt(head_size)
 
             end
 
@@ -126,12 +130,11 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
 
             xb_head = @view xb[((h - 1) * head_size + 1):(h * head_size)]
 
-            for t in 1:pos
+            for t in 1:(pos + 1)
 
-                v = state.value_cache[l, t, ((div(h, kv_mul) - 1) * head_size + 1):(div(h, kv_mul) * head_size)]
-                a = att[t]
+                v = state.value_cache[l, t, (div(h - 1, kv_mul) * head_size + 1):((div(h - 1, kv_mul) + 1) * head_size)]
                 
-                xb_head += a * v
+                xb_head .+= att[t] * v
 
             end
 
@@ -145,22 +148,18 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
         hb2 = weights.w3[l, :, :] * xb
 
         for i in 1:hidden_dim
-            val = hb[i]
-            val *= (1.0f0 / (1.0f0 + exp(-val)))
-            val *= hb2[i]
-            hb[i] = val
+            hb[i] = hb[i] * hb2[i] / (1.0f0 + exp(-hb[i]))
         end
 
-        xb = weights.w2[l, :, :] * hb
+        x .+= weights.w2[l, :, :] * hb
 
-        x += xb
     end
-
+    
     x .= rmsnorm(x, weights.rms_final_weight) # final rmsnorm
     
     # classifier into logits
     state.logits .= weights.wcls * x
-
+    
     return state.logits
 
 end

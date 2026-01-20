@@ -11,11 +11,17 @@ to start the text generation and generate up to `max_tokens` tokens.
 If `verbose`, print the text during generation.
 
 ```julia
-julia> talktollm("/PATH/TO/YOUR/MODEL.bin")
- Once upon a time, there was a little girl named Lily. She loved to play in the park with her friends. One day, while they were playing, they saw a giant walking by. They were very fearful and didn't know what to do.<0x0A>Suddenly, a little bird flew down and landed on the giant's back. The bird started to peck at the giant, like it was his babies. Lily and her friends were scared, but the bird sang a beautiful song and the giant smiled. He was walking away with the bird on his back!<0x0A>Lily and her friends were very happy and thanked the giant for showing them the way. From that day on, they would always look up at the giant whenever they played in the park, with his fluffy tail waving in the wind once again.
+julia> print(talktollm("/PATH/TO/YOUR/MODEL.bin"))
+ Once upon a time, there was a little girl named Lily. She loved to play outside in the park with her friends. One day, Lily was running and she fell and hit her head on a rock. She got a big ouchie and it started to bleed. 
+Lily's mom took her to the doctor and the doctor said she needed a stitch. Lily was scared, but her mom was very dependable and told her they would be coming back home soon. 
+After the doctor fixed Lily's knee, they went home and Lily's friends came to play again. But Lily's mom noticed that she was playing with a ball and some new toys. This made her very happy.
 
-julia> talktollm("/PATH/TO/YOUR/MODEL.bin", "\"What is this?\"")
-"What is this?" she asked. <0x0A>Sissy smiled and said, "That's an aeroplane! We can hop on it!" <0x0A>Lucy was so excited, but she was also a little scared that the aeroplane might not be cool sooner. She laughed, but kept it a little longer. <0x0A>Sissy and Lucy both climbed into the aeroplane. Suddenly they felt like they were flying up! <0x0A>"Weird", said Lucy, smiling.<0x0A>They hopped off the aeroplane, and the grass was so soft and cool. But they were still too small to get on.<0x0A>Lucy grinned; she had so much fun exploring the world from high up in the sky!
+julia> print(talktollm("/PATH/TO/YOUR/MODEL.bin", "\"What is this?\""))
+"What is this?" the woman asked.
+The little girl looked at the bookion and said, "This is a book about a princess. Maybe we can use it together."
+They decided to sit down and read the book together. They read about a beautiful garden with lovely flowers. The little girl loved the book very much and said, "I want to be a princess again!"
+"Maybe, if you read me another book," the woman said.
+From that day on, they would sit down and read the book every night before bed. They hoped that when they finished reading it, something magical would happen.
 ```
 """
 function talktollm(modelpath::String, prompt::String = "", max_tokens::Int=255; vocabpath::String = _vocabpath, verbose::Bool = false)
@@ -52,6 +58,9 @@ function talktollm(modelpath::String, prompt::String = "", max_tokens::Int=255; 
         next == 2 && break
 
         push!(result, next)
+        if tok.vocab[next] == "<0x0A>"
+            @info next
+        end
         verbose && print(tok.vocab[next])
 
         token = next

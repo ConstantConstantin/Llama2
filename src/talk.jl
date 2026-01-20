@@ -58,9 +58,6 @@ function talktollm(modelpath::String, prompt::String = ""; max_tokens::Int=255, 
         next == 2 && break
 
         push!(result, next)
-        if tok.vocab[next] == "<0x0A>"
-            @info next
-        end
         verbose && print(tok.vocab[next])
 
         token = next

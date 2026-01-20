@@ -90,7 +90,9 @@ struct Tokenizer
     )
         max_token_length < 0 && throw(DomainError("max_token_length must be > 0."))
         length(byte_pieces) != 256 && throw(ArgumentError("Length of byte_pieces must be 256."))
-        
+
+        # manually replace newline token for julia
+        vocab[14] = "\n"
         new(convert(Vector{String}, vocab), 
             convert(Vector{Float32}, vocab_scores), 
             convert(Vector{TokenIndex}, sorted_vocab), 

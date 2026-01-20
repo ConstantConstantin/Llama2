@@ -1,13 +1,14 @@
 _vocabpath = normpath(joinpath(@__DIR__, "..", "data", "tokenizer.bin"))
 
 """
-    talktollm(modelpath::String, prompt::String[, max_tokens::Int]; vocabpath::String)
+    talktollm(modelpath::String, prompt::String[, max_tokens::Int]; vocabpath::String, verbose::Bool)
 
 Generate text using a pretrained LLama2 transformer model.
-The function loads the
-model from `modelpath` and the corresponding tokenizer from `vocabpath`
-(which defaults to `"data/tokenizer.bin"`). It takes an initial `prompt` string
-to start the text generation and generates up to `max_tokens` tokens.
+Return that text as a `String`.
+Load the model from `modelpath` and the corresponding tokenizer from `vocabpath`
+(which defaults to `"data/tokenizer.bin"`). Take an initial `prompt` `String`
+to start the text generation and generate up to `max_tokens` tokens.
+If `verbose`, print the text during generation.
 
 ```julia
 julia> talktollm("/PATH/TO/YOUR/MODEL.bin")
@@ -17,17 +18,21 @@ julia> talktollm("/PATH/TO/YOUR/MODEL.bin", "\"What is this?\"")
 "What is this?" she asked. <0x0A>Sissy smiled and said, "That's an aeroplane! We can hop on it!" <0x0A>Lucy was so excited, but she was also a little scared that the aeroplane might not be cool sooner. She laughed, but kept it a little longer. <0x0A>Sissy and Lucy both climbed into the aeroplane. Suddenly they felt like they were flying up! <0x0A>"Weird", said Lucy, smiling.<0x0A>They hopped off the aeroplane, and the grass was so soft and cool. But they were still too small to get on.<0x0A>Lucy grinned; she had so much fun exploring the world from high up in the sky!
 ```
 """
-function talktollm(modelpath::String, prompt::String = "", max_tokens::Int=255; vocabpath::String = _vocabpath)
+function talktollm(modelpath::String, prompt::String = "", max_tokens::Int=255; vocabpath::String = _vocabpath, verbose::Bool = false)
 
     transformer = Transformer(modelpath)
     tok = Tokenizer(vocabpath, transformer.config.vocab_size)
 
     input_tokens = encode(tok, prompt)
 
+    result = Vector{Int32}()
+    sizehint!(result, max_tokens)
+
     if isempty(input_tokens)
         input_tokens = [2] # default for empty prompt
     else
-        print(tok.vocab[input_tokens[1]])
+        push!(result, input_tokens[1])
+        verbose &&  print(tok.vocab[input_tokens[1]])
     end
 
     token = input_tokens[1]
@@ -45,14 +50,15 @@ function talktollm(modelpath::String, prompt::String = "", max_tokens::Int=255; 
         end
 
         next == 2 && break
-        
-        print(tok.vocab[next])
+
+        push!(result, next)
+        verbose && print(tok.vocab[next])
 
         token = next
         
     end
 
-    println()
+    verbose && println()
     
-    return nothing
+    return string(broadcast(x -> tok.vocab[x], result)...)
 end

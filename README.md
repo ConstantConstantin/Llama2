@@ -40,8 +40,10 @@ julia> using Llama2
 ## Example usage
 
 ```julia
-julia> "our example"
-"our example"
+julia> print(talktollm("/PATH/TO/YOUR/MODEL.bin"))
+ Once upon a time, there was a humble cat named Tom. Tom was not big or fancy, but he was very kind. He would always help others and share his toys with them.
+One day, a little bird named Sally came to Tom's pond. Sally told Tom that her baby bird was sick. Tom wanted to help her, so he had an idea. He took the bird home and gave her food. The bird seemed happy, but one day, they had to leave a big mess in the pond.
+Sally found a magic wand. She waved it, and suddenly, the baby bird vanished! Tom was very sad and went back to the pond. But now, he was ready to help. He waved his magic wand, and the baby bird came back! Tom was so happy to see Sally and helped her with her baby bird. From that day on, they all became good friends and lived happily ever after.
 ```
 
 Please refer to the docs for more detailed information on how to use this package.

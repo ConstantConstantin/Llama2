@@ -36,4 +36,8 @@ https://huggingface.co/meta-llama
 ### Original Repo of Llama2 in C
 https://github.com/karpathy/llama2.c
 
+## Notice
+This project uses Llama 2 model weights.
+Weights are not distributed with this repository.
+You must accept the Llama 2 Community License before downloading.
 

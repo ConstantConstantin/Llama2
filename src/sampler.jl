@@ -1,5 +1,3 @@
-using Random
-
 """
     ProbIndex
 
@@ -11,10 +9,8 @@ Throw a `DomainError` if `index < 0`.
 
 
 # Examples
-```jldoctest
-julia> using Llama2;
-
-julia> ProbIndex(1.0, 2)
+```julia
+julia> Llama2.ProbIndex(1.0, 2)
 ProbIndex(1.0f0, 2)
 
 julia> ProbIndex(1.0, -1)
@@ -22,7 +18,7 @@ ERROR: DomainError with Prob index must be > 0.:
 [...]
 ```
 """
-struct ProbIndex
+mutable struct ProbIndex
     prob::Float32
     index::Int32
 
@@ -83,7 +79,8 @@ struct Sampler
 end
 function Sampler(vocab_size::Integer, temperature::AbstractFloat, topp::AbstractFloat, rng_seed::Integer) 
     # karpathy: buffer only used with nucleus sampling; may not need but it's ~small:
-    probindex = Vector{ProbIndex}(undef, vocab_size)
+    # probindex = Vector{ProbIndex}(undef, vocab_size)
+    probindex = [ProbIndex(0.0f0, 0) for _ in 1:vocab_size]
     Sampler(vocab_size, probindex, temperature, topp, rng_seed)
 end
 
@@ -107,11 +104,15 @@ If numerical roundoff prevents an early return, the last index is returned.
 """
 function sample_mult(probabilities::Vector{Float32}, coin::Float64)
     cdf = 0.0f0
+    idx = 1
     for i in eachindex(probabilities)
         cdf += probabilities[i]
-        coin < cdf && return i
+        if coin < cdf
+            idx = i
+            break
+        end
     end
-    return lastindex(probabilities)
+    return idx
 end
 
 """
@@ -153,15 +154,21 @@ function sample_topp(probabilities::Vector{Float32},
     coin::Float64
     )
 
+    n0 = 1
     cutoff = (1.0f0 - topp) / length(probabilities)
-    probindex.index = findall(x -> x >= cutoff, probabilities)
-    probindex.prob = probabilities[probindex.index]
-
-    sort!(probindex, lt=isless_probindex)
+    @inbounds for i in eachindex(probabilities)
+        if probabilities[i] >= cutoff
+            probindex[n0].index = i
+            probindex[n0].prob = probabilities[i]
+            n0 += 1
+        end
+    end
+    len = n0 - 1
+    sort!(view(probindex, 1:len), lt=isless_probindex)
 
     cumulative_prob = 0.0f0
-    last_idx = lastindex(probindex)
-    @inbounds for i in eachindex(probindex)
+    last_idx = len
+    @inbounds for i in 1:len
         cumulative_prob += probindex[i].prob
         if cumulative_prob > topp
             last_idx = i
@@ -169,15 +176,17 @@ function sample_topp(probabilities::Vector{Float32},
         end
     end
 
-    r = coin * cumulative_prob
+    r = Float32(coin * cumulative_prob)
     cdf = 0.0f0
-    @inbounds for i in eachindex(probindex)
+    idx = 1
+    @inbounds for i in 1:len
         cdf += probindex[i].prob
         if r < cdf
-            return probindex[i].index
+            idx = i
+            break
         end
     end
-    return probindex[last_idx].index
+    return probindex[idx].index
 end
 
 """
@@ -204,7 +213,7 @@ function (sampler::Sampler)(logits::Vector{Float32})
         next = argmax(logits)
     else
         logits = logits / sampler.temperature
-        softmax!(logits)
+        logits = softmax!(logits)
 
         rng = MersenneTwister(sampler.rng_state)
         coin = rand(rng)

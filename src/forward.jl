@@ -32,14 +32,14 @@ end
 
 
 """
-softmax!(x)
+softmax(x)
 Updates the Output of an Layer 'x' with the softmax of the input.
 
 # Examples
 ```jldoctest
 julia> x = [-1.0f0,0,1];
 
-julia> Llama2.softmax!(x);
+julia> Llama2.softmax(x);
 
 julia> x
 3-element Vector{Float32}:
@@ -48,7 +48,7 @@ julia> x
  0.66524094
 ```
 """
-function softmax!(x::AbstractVector{Float32})
+function softmax(x::AbstractVector{Float32})
 
     isempty(x) && throw(ArgumentError("x must not be empty"))
 
@@ -63,7 +63,7 @@ function softmax!(x::AbstractVector{Float32})
     return x
 end
 
-function forward!(transformer::Transformer, token::Int32, pos::Int32)
+function forward(transformer::Transformer, token::Int32, pos::Int32)
 
     config = transformer.config
     weights = transformer.weights
@@ -126,7 +126,7 @@ function forward!(transformer::Transformer, token::Int32, pos::Int32)
 
             end
 
-            softmax!(att)
+            softmax(att)
 
             xb_head = @view xb[((h - 1) * head_size + 1):(h * head_size)]
 

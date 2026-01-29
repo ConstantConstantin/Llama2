@@ -33,23 +33,21 @@ struct TokenIndex
 end
 
 """
-    compare_tokens(first_token::TokenIndex, second_token::TokenIndex) -> Bool
+    Base.isless(first_token::TokenIndex, second_token::TokenIndex) -> Bool
 
 Compare two `first_token` and `scond_token` by their string values.
 It returns `true` if `first_token`'s string is **lexicographically** less than the second's, and `false` otherwise.
 
 # Examples
 ```jldoctest
-julia> Llama2.isless_tokens(Llama2.TokenIndex("A", 1), Llama2.TokenIndex("B", 2))
+julia> isless(Llama2.TokenIndex("A", 1), Llama2.TokenIndex("B", 2))
 true
 
-julia> Llama2.isless_tokens(Llama2.TokenIndex("B", 1), Llama2.TokenIndex("A", 2))
+julia> isless(Llama2.TokenIndex("B", 1), Llama2.TokenIndex("A", 2))
 false
 ```
 """
-function compare_tokens(first_token::TokenIndex, second_token::TokenIndex)::Bool
-    return isless(first_token.str, second_token.str)
-end
+Base.:isless(first_token::TokenIndex, second_token::TokenIndex) = isless(first_token.str, second_token.str)
 
 """
     Tokenizer
@@ -141,7 +139,7 @@ julia> Llama2.str_lookup("ba", [Llama2.TokenIndex("aa", 1), Llama2.TokenIndex("b
 function str_lookup(str::String, sorted_vocab::Vector{TokenIndex})::Int16
 
     tok = TokenIndex(str, Int16(0))
-    idx = searchsortedfirst(sorted_vocab, tok; lt = compare_tokens)
+    idx = searchsortedfirst(sorted_vocab, tok; lt = isless)
     if idx <= length(sorted_vocab) && sorted_vocab[idx].str == str
         return sorted_vocab[idx].id
     else
@@ -163,7 +161,7 @@ function encode(tokenizer::Tokenizer, text::String)
         for i in 1:tokenizer.vocab_size
             tokenizer.sorted_vocab[i] = TokenIndex(tokenizer.vocab[i], i)
         end
-        sort!(tokenizer.sorted_vocab, lt = compare_tokens)
+        sort!(tokenizer.sorted_vocab, lt = isless)
     end
 
     tokens = Vector{Integer}(undef, length(text))

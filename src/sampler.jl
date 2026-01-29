@@ -79,7 +79,6 @@ struct Sampler
 end
 function Sampler(vocab_size::Integer, temperature::AbstractFloat, topp::AbstractFloat, rng_seed::Integer) 
     # karpathy: buffer only used with nucleus sampling; may not need but it's ~small:
-    # probindex = Vector{ProbIndex}(undef, vocab_size)
     probindex = [ProbIndex(0.0f0, 0) for _ in 1:vocab_size]
     Sampler(vocab_size, probindex, temperature, topp, rng_seed)
 end
@@ -102,7 +101,7 @@ exceeds `coin`.
 
 If numerical roundoff prevents an early return, the last index is returned.
 """
-function sample_mult(probabilities::Vector{Float32}, coin::Float64)
+function sample_mult(probabilities::Vector{Float32}, coin::Float32)
     cdf = 0.0f0
     idx = 1
     for i in eachindex(probabilities)
@@ -116,16 +115,14 @@ function sample_mult(probabilities::Vector{Float32}, coin::Float64)
 end
 
 """
-    isless_probindex(a::ProbIndex, b::ProbIndex) -> Bool
+    isless(a::ProbIndex, b::ProbIndex) -> Bool
 
 Comparison function for ordering `ProbIndex` values by probability.
 
 Return `true` if `a.prob < b.prob`. Intended for use as the `lt` argument
 to sorting routines.
 """
-function isless_probindex(first_probindex::ProbIndex, second_probindex::ProbIndex)
-    return first_probindex.prob < second_probindex.prob
-end
+Base.:isless(a::ProbIndex, b::ProbIndex) = isless(a.prob, b.prob)
 
 """
     sample_topp(probabilities, topp, probindex, coin) -> Int
@@ -151,7 +148,7 @@ The `probindex` buffer is mutated and reused to avoid allocations.
 function sample_topp(probabilities::Vector{Float32},
     topp::Float32,
     probindex::Vector{ProbIndex},
-    coin::Float64
+    coin::Float32
     )
 
     n0 = 1
@@ -164,7 +161,7 @@ function sample_topp(probabilities::Vector{Float32},
         end
     end
     len = n0 - 1
-    sort!(view(probindex, 1:len), lt=isless_probindex)
+    sort!(view(probindex, 1:len), lt=isless)
 
     cumulative_prob = 0.0f0
     last_idx = len
@@ -213,10 +210,10 @@ function (sampler::Sampler)(logits::Vector{Float32})
         next = argmax(logits)
     else
         logits = logits / sampler.temperature
-        logits = softmax!(logits)
+        logits = softmax(logits)
 
         rng = MersenneTwister(sampler.rng_state)
-        coin = rand(rng)
+        coin = Float32(rand(rng))
 
         if sampler.topp <= 0 || sampler.topp >= 1
             next = sample_mult(logits, coin)

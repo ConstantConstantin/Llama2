@@ -46,7 +46,7 @@ function talktollm(modelpath::String, prompt::String = ""; max_tokens::Int=255, 
 
     for pos in 1:max_tokens
 
-        logits = forward!(transformer, Int32(token), Int32(pos))
+        logits = forward(transformer, Int32(token), Int32(pos))
 
         if pos < n_input_tokens
             next = input_tokens[pos + 1]

@@ -7,7 +7,7 @@ You want to understand how this package works or modify the code you are running
 ```@docs
 Llama2.Tokenizer
 Llama2.TokenIndex
-Llama2.isless_tokens
+Base.isless(::Llama2.TokenIndex, ::Llama2.TokenIndex)
 Llama2.str_lookup
 Llama2.encode
 ```
@@ -21,11 +21,11 @@ Llama2.TransformerWeights
 Llama2.RunState
 ```
 
-## forward!
+## forward
 
 ```@docs
 Llama2.rmsnorm
-Llama2.softmax!
+Llama2.softmax
 ```
 
 ## Sampler
@@ -33,7 +33,7 @@ Llama2.softmax!
 ```@docs
 Llama2.Sampler
 Llama2.ProbIndex
-Llama2.isless_probindex
+isless(::Llama2.ProbIndex, ::Llama2.ProbIndex)
 Llama2.sample_mult
 Llama2.sample_topp
 ```

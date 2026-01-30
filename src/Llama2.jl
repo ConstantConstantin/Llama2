@@ -11,5 +11,6 @@ include("structs.jl")
 include("decode_transformer.jl")
 include("forward.jl")
 include("talk.jl")
+include("sampler.jl")
 
 end

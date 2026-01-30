@@ -67,7 +67,7 @@ The little girl was very excited. She said thank you and then, followed her favo
 
 The provided example model is a storyteller capable of generating a random story or continuing a story initiated by the user. 
 
-## API
+## API Reference
 
 ```@index
 ```

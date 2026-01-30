@@ -96,7 +96,7 @@ until she saw there was a beautiful light online.
 When the old house passed, the girl happily went inside. It was very old, but it had been there for a long time. The old house was very special, and she thought the light was the prettiest thing ever.
 ```
 """
-function chatwithllm(bot::ChatBot, prompt::String = ""; max_tokens::Int = 63, verbose::Bool = false)
+function chatwithllm(bot::ChatBot, prompt::String = ""; max_tokens::Int = 255, verbose::Bool = false)
 
     transformer = bot.transformer
     tok = bot.tokenizer
@@ -115,9 +115,14 @@ function chatwithllm(bot::ChatBot, prompt::String = ""; max_tokens::Int = 63, ve
 
     token = input_tokens[1]
     n_input_tokens = length(input_tokens)
+    end_str = ""
 
     for pos in bot.pos:(bot.pos + max_tokens - 1)
-
+        if pos >= transformer.config.seq_len - 1
+            empty!(result)
+            end_str = "YOUR CHAT REACHED MAXIMUM SEQUENCE LENGTH!"
+            break
+        end
         logits = forward!(transformer, Int32(token), Int32(pos))
 
         if pos + 1 - bot.pos < n_input_tokens
@@ -127,7 +132,9 @@ function chatwithllm(bot::ChatBot, prompt::String = ""; max_tokens::Int = 63, ve
             next = wsample(logits)
         end
 
-        next == 2 && break
+        if next == 2
+            break
+        end
 
         push!(result, next)
         verbose && print(tok.vocab[next])
@@ -137,9 +144,9 @@ function chatwithllm(bot::ChatBot, prompt::String = ""; max_tokens::Int = 63, ve
     end
 
     bot.pos += length(result)
-    bot.last_token = result[end]
+    !isempty(result) && (bot.last_token = result[end])
 
     verbose && println()
     
-    return string(broadcast(x -> tok.vocab[x], result)...)
+    return string(broadcast(x -> tok.vocab[x], result)..., end_str)
 end

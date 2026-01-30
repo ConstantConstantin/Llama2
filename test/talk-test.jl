@@ -25,8 +25,8 @@
 
         c = ChatBot(p)
 
-        d = chatwithllm(c)
-        e = chatwithllm(c, " a secret path")
+        d = chatwithllm(c; max_tokens=63)
+        e = chatwithllm(c, " a secret path"; max_tokens=63)
 
         @test d isa String
         @test e isa String
@@ -34,6 +34,13 @@
         @test d == " Once upon a time, there was a little bird who loved singing. She flew everywhere in the forest, and sometimes even made up her own song for the other birds to sing along. One day, she met a little girl who was lost and couldn't find her way home. The little bird showed her"
         @test e == " a secret path that led the way to her home.\nThe little girl was grateful and thanked the bird. But as she started to leave, the little bird became selfish and scurried away. The little girl was sad and realized that she should have listened to the bird's advice and left the little"
 
+        f = ChatBot(p)
+
+        g = chatwithllm(f; max_tokens=300)
+
+        @test g isa String
+
+        @test g == " Anna liked to play with her toy house. She would pretend to be a mommy and a daddy, and she would dress up nails with her toys. She had a lot of fun with her toy house.\nOne day, Anna was playing with her toy house when she saw a small bird outside her window. The bird was chirping and cheerful, almost like a magic show. Anna wanted to see the bird closer, so she opened the window and climbed out.\nBut as soon as she went outside, the window started to crack. Anna strangely realized she was trapped inside. She tried to reach and push, but it was too fragile and hurt her hand. She screamed for help, but nobody saw her.\nSuddenly, the window broke and Anna was trapped inside. It was dark and scary. She hoped that everyone would hear her and come to help her. But no one did. Anna realized that pretending was not enough. She wished that she had a friend to help her. But nobody came. Anna was trapped in the room with no one to talk to. And sometimes, pretending is all that way.YOUR CHAT REACHED MAXIMUM SEQUENCE LENGTH!"
     end
 
 end

@@ -107,7 +107,7 @@ function chatwithllm(bot::ChatBot, prompt::String = ""; max_tokens::Int = 63, ve
     sizehint!(result, max_tokens)
 
     if isempty(input_tokens)
-        input_tokens = [2] # default for empty prompt
+        input_tokens = [bot.last_token] # default for empty prompt
     else
         push!(result, input_tokens[1])
         verbose && print(tok.vocab[input_tokens[1]])
@@ -137,6 +137,7 @@ function chatwithllm(bot::ChatBot, prompt::String = ""; max_tokens::Int = 63, ve
     end
 
     bot.pos += length(result)
+    bot.last_token = result[end]
 
     verbose && println()
     

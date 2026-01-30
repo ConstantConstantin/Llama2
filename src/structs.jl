@@ -82,6 +82,7 @@ mutable struct ChatBot
     transformer::Transformer
     tokenizer::Tokenizer
     pos::Int32
+    last_token::Int32
 end
 
 """
@@ -95,5 +96,5 @@ The `ChatBot` struct is used with [`chatwithllm`](@ref) for continuous text gene
 function ChatBot(path::String; vocabpath::String = _vocabpath)
     transformer = Transformer(path)
     tok = Tokenizer(vocabpath, transformer.config.vocab_size)
-    return ChatBot(transformer, tok, 1)
+    return ChatBot(transformer, tok, 1, 2)
 end

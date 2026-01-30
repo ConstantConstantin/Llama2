@@ -94,7 +94,7 @@ exceeds `coin`.
 
 # Arguments
 - `probabilities::Vector{Float32}`: Probability mass function (must sum to 1).
-- `coin::Float64`: Uniform random number in `[0, 1)`.
+- `coin::Float32`: Uniform random number in `[0, 1)`.
 
 # Returns
 - Index of the sampled element.
@@ -210,7 +210,7 @@ function (sampler::Sampler)(logits::Vector{Float32})
         next = argmax(logits)
     else
         logits = logits / sampler.temperature
-        logits = softmax(logits)
+        logits = softmax!(logits)
 
         rng = MersenneTwister(sampler.rng_state)
         coin = Float32(rand(rng))

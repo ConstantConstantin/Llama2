@@ -37,11 +37,14 @@ They decided to sit down and read the book together. They read about a beautiful
 From that day on, they would sit down and read the book every night before bed. They hoped that when they finished reading it, something magical would happen.
 ```
 """
-function talktollm(modelpath::String, prompt::String = ""; max_tokens::Int=255, vocabpath::String = _vocabpath, verbose::Bool = false, temperature::Float32 = 0.f0, topp::Float32 = 1.1f0)
+function talktollm(modelpath::String, prompt::String = ""; max_tokens::Int=255, vocabpath::String = _vocabpath, verbose::Bool = false, temperature::Union{Nothing, Float32} = nothing, topp::Float32 = 1.1f0)
 
     transformer = Transformer(modelpath)
     tok = Tokenizer(vocabpath, transformer.config.vocab_size)
-    sampler = Sampler(transformer.config.vocab_size, temperature, topp, 1234)
+
+    if temperature !== nothing
+        sampler = Sampler(transformer.config.vocab_size, temperature, topp, 1234)
+    end
 
     input_tokens = encode(tok, prompt)
 
@@ -60,12 +63,17 @@ function talktollm(modelpath::String, prompt::String = ""; max_tokens::Int=255, 
 
     for pos in 1:max_tokens
 
-        logits = forward(transformer, Int32(token), Int32(pos))
+        logits = forward!(transformer, Int32(token), Int32(pos))
 
         if pos < n_input_tokens
             next = input_tokens[pos + 1]
         else
-            next = sampler(logits)
+            if temperature === nothing
+                softmax!(logits)
+                next = wsample(logits)
+            else
+                next = sampler(logits)
+            end
         end
 
         next == 2 && break
@@ -111,10 +119,14 @@ until she saw there was a beautiful light online.
 When the old house passed, the girl happily went inside. It was very old, but it had been there for a long time. The old house was very special, and she thought the light was the prettiest thing ever.
 ```
 """
-function chatwithllm(bot::ChatBot, prompt::String = ""; max_tokens::Int = 256, verbose::Bool = false)
+function chatwithllm(bot::ChatBot, prompt::String = ""; max_tokens::Int = 256, verbose::Bool = false, temperature::Union{Nothing, Float32} = nothing, topp::Float32 = 1.1f0)
 
     transformer = bot.transformer
     tok = bot.tokenizer
+
+    if temperature !== nothing
+        sampler = Sampler(transformer.config.vocab_size, temperature, topp, 1234)
+    end
     
     input_tokens = encode(tok, prompt)
 
@@ -142,8 +154,12 @@ function chatwithllm(bot::ChatBot, prompt::String = ""; max_tokens::Int = 256, v
         if pos + 1 - bot.pos < n_input_tokens
             next = input_tokens[pos + 2 - bot.pos]
         else
-            softmax!(logits)
-            next = wsample(logits)
+            if temperature === nothing
+                softmax!(logits)
+                next = wsample(logits)
+            else
+                next = sampler(logits)
+            end
         end
 
         if next == 2

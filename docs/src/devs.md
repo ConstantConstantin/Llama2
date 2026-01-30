@@ -21,12 +21,12 @@ Llama2.TransformerWeights
 Llama2.RunState
 ```
 
-## forward
+## forward!
 
 ```@docs
-Llama2.forward
+Llama2.forward!
 Llama2.rmsnorm
-Llama2.softmax
+Llama2.softmax!
 ```
 
 ## Sampler

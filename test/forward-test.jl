@@ -1,4 +1,4 @@
-@testset "forward" begin
+@testset "forward!" begin
 
     @testset "helpers" begin
 
@@ -24,26 +24,26 @@
 
         end
 
-        @testset "softmax" begin
+        @testset "softmax!" begin
 
-            @test Llama2.softmax(x4) isa AbstractVector{Float32}
+            @test Llama2.softmax!(x4) isa AbstractVector{Float32}
             @test x4 == Float32[0.032058604, 0.08714432, 0.23688284, 0.6439143]
-            Llama2.softmax.((y4, x5, y5))
+            Llama2.softmax!.((y4, x5, y5))
             @test y4 == Float32[0.25, 0.25, 0.25, 0.25]
             @test x5 == Float32[0.01165623, 0.63640857, 0.23412165, 0.08612854, 0.031684916]
             @test y5 == Float32[0.2, 0.2, 0.2, 0.2, 0.2]
 
-            @test_throws ArgumentError Llama2.softmax(empty_vector)
+            @test_throws ArgumentError Llama2.softmax!(empty_vector)
 
         end
 
     end
 
-    @testset "forward" begin
+    @testset "forward!" begin
 
         t = Llama2.Transformer(normpath(joinpath(@__DIR__, "..", "data", "stories15M.bin")))
 
-        l = Llama2.forward(t, Int32(2), Int32(1))
+        l = Llama2.forward!(t, Int32(2), Int32(1))
 
         @test l isa Vector{Float32}
         @test l == t.state.logits

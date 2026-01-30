@@ -40,7 +40,7 @@ end
 
 """
     softmax!(x) -> Vector{Float32}
-Updates the output of an layer 'x' with the softmax of the input.
+Updates the output of an layer 'x' with the softmax! of the input.
 
 Transform logits into a probability distribution by exponentiating and
 normalizing. Uses the numerically stable formulation:
@@ -58,7 +58,7 @@ The input vector is modified in-place and also returned.
 ```jldoctest
 julia> x = [-1.0f0,0,1];
 
-julia> Llama2.softmax(x);
+julia> Llama2.softmax!(x);
 
 julia> x
 3-element Vector{Float32}:
@@ -67,7 +67,7 @@ julia> x
  0.66524094
 ```
 """
-function softmax(x::AbstractVector{Float32})
+function softmax!(x::AbstractVector{Float32})
 
     isempty(x) && throw(ArgumentError("x must not be empty"))
 
@@ -109,7 +109,7 @@ logits = forward!(model, token, pos)
 next_token = argmax(logits)
 ```
 """
-function forward(transformer::Transformer, token::Int32, pos::Int32)
+function forward!(transformer::Transformer, token::Int32, pos::Int32)
 
     config = transformer.config
     weights = transformer.weights
@@ -172,7 +172,7 @@ function forward(transformer::Transformer, token::Int32, pos::Int32)
 
             end
 
-            softmax(att)
+            softmax!(att)
 
             xb_head = @view xb[((h - 1) * head_size + 1):(h * head_size)]
 

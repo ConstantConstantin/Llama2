@@ -17,7 +17,7 @@
         c = ChatBot(p)
 
         d = chatwithllm(c)
-        e = chatwithllm(c, " and")
+        e = chatwithllm(c, " and then he")
 
         @test d isa String
 

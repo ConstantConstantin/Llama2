@@ -1,3 +1,5 @@
+_vocabpath = normpath(joinpath(@__DIR__, "..", "data", "tokenizer.bin"))
+
 """
     Config
 
@@ -74,4 +76,25 @@ This is an internal struct.
         logits = Vector{Float32}(undef, config.vocab_size)
         new(config, weights, RunState(logits, key_cache, value_cache))
     end
+end
+
+mutable struct ChatBot
+    transformer::Transformer
+    tokenizer::Tokenizer
+    pos::Int32
+    last_token::Int32
+end
+
+"""
+    ChatBot(path::String; vocabpath::String)
+
+Create a `ChatBot` constructing a `Transformer` from `path`.
+
+`vocabpath` defaults to `"data/tokenizer.bin"`.
+The `ChatBot` struct is used with [`chatwithllm`](@ref) for continuous text generation.
+"""
+function ChatBot(path::String; vocabpath::String = _vocabpath)
+    transformer = Transformer(path)
+    tok = Tokenizer(vocabpath, transformer.config.vocab_size)
+    return ChatBot(transformer, tok, 1, 2)
 end

@@ -10,8 +10,10 @@ wget https://huggingface.co/karpathy/tinyllamas/resolve/main/stories15M.bin
 
 ## Inferencing
 
-You can either generate a single text, optionally giving an input prompt, or have an interactive chat (TODO).
+You can either generate a single text, optionally giving an input prompt, or have an interactive chat.
 
 ```@docs
 talktollm
+ChatBot
+chatwithllm
 ```

@@ -1,5 +1,3 @@
-_vocabpath = normpath(joinpath(@__DIR__, "..", "data", "tokenizer.bin"))
-
 """
     talktollm(modelpath::String, [prompt::String]; max_tokens::Int, vocabpath::String, verbose::Bool)
 
@@ -63,6 +61,83 @@ function talktollm(modelpath::String, prompt::String = ""; max_tokens::Int=255, 
         token = next
         
     end
+
+    verbose && println()
+    
+    return string(broadcast(x -> tok.vocab[x], result)...)
+end
+
+"""
+    chatwithllm(bot::ChatBot, [prompt::String]; max_tokens::Int, verbose::Bool)
+
+Generate text using a pretrained LLama2 transformer model.
+Return that text as a `String`.
+
+Multiple calls on the same instance of `ChatBot` respect the previously generated tokens and continue generation from there.
+Take an initial `prompt` `String`
+to start the text generation and generate up to `max_tokens` tokens.
+If `verbose`, print the text during generation.
+
+```julia
+julia> c = ChatBot("data/stories15M.bin");
+
+julia> print(chatwithllm(c))
+ Once upon a time, there was an old house with an ancient sign inside. The sign was very big and had many words on it. One day, a little girl went to visit the old house. She wanted to see what was inside.
+The old house said, "Hello? Can I come in?"
+
+julia> print(chatwithllm(c, "\nThe little girl said:"))
+
+The little girl said: "Yes please! Can I come in too?"
+The old house thought for moments before it said, "Yes. This light is available for you 30 cent a nightmare."
+The little girl was very excited. She said thank you and then, followed her favorite sign
+
+julia> print(chatwithllm(c, "until"))
+until she saw there was a beautiful light online.
+When the old house passed, the girl happily went inside. It was very old, but it had been there for a long time. The old house was very special, and she thought the light was the prettiest thing ever.
+```
+"""
+function chatwithllm(bot::ChatBot, prompt::String = ""; max_tokens::Int = 63, verbose::Bool = false)
+
+    transformer = bot.transformer
+    tok = bot.tokenizer
+    
+    input_tokens = encode(tok, prompt)
+
+    result = Vector{Int32}()
+    sizehint!(result, max_tokens)
+
+    if isempty(input_tokens)
+        input_tokens = [bot.last_token] # default for empty prompt
+    else
+        push!(result, input_tokens[1])
+        verbose && print(tok.vocab[input_tokens[1]])
+    end
+
+    token = input_tokens[1]
+    n_input_tokens = length(input_tokens)
+
+    for pos in bot.pos:(bot.pos + max_tokens - 1)
+
+        logits = forward!(transformer, Int32(token), Int32(pos))
+
+        if pos + 1 - bot.pos < n_input_tokens
+            next = input_tokens[pos + 2 - bot.pos]
+        else
+            softmax!(logits)
+            next = wsample(logits)
+        end
+
+        next == 2 && break
+
+        push!(result, next)
+        verbose && print(tok.vocab[next])
+
+        token = next
+        
+    end
+
+    bot.pos += length(result)
+    bot.last_token = result[end]
 
     verbose && println()
     
